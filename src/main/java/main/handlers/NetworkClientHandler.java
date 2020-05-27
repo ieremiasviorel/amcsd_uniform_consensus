@@ -6,29 +6,42 @@ import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Arrays;
+import java.util.List;
 
 public class NetworkClientHandler extends Thread {
 
     private final Socket clientSocket;
+    private final List<Paxos.Message> messageQueue;
     private final DataInputStream dIn;
 
-    public NetworkClientHandler(Socket socket) throws IOException {
-        clientSocket = socket;
-        dIn = new DataInputStream(clientSocket.getInputStream());
+    public NetworkClientHandler(Socket clientSocket, List<Paxos.Message> messageQueue) throws IOException {
+        this.clientSocket = clientSocket;
+        this.messageQueue = messageQueue;
+        this.dIn = new DataInputStream(this.clientSocket.getInputStream());
     }
 
+    @Override
     public void run() {
         try {
             int messageSize = dIn.readInt();
             byte[] byteBuffer = new byte[messageSize];
-            dIn.read(byteBuffer, 0, messageSize);
+            int readMessageSize = dIn.read(byteBuffer, 0, messageSize);
+
+            if (messageSize != readMessageSize) {
+                throw new RuntimeException("Network has incorrect size: expected = " + messageSize + ", actual = " + readMessageSize);
+            }
+
             Paxos.Message outerMessage = Paxos.Message.parseFrom(byteBuffer);
-            System.out.println("Outer message type: " + outerMessage.getType());
+
+            if (outerMessage.getType() != Paxos.Message.Type.NETWORK_MESSAGE) {
+                throw new RuntimeException("Network message has incorrect type: expected = " + Paxos.Message.Type.NETWORK_MESSAGE + ", actual size " + outerMessage.getType());
+            }
+
             Paxos.NetworkMessage networkMessage = outerMessage.getNetworkMessage();
+
             Paxos.Message innerMessage = networkMessage.getMessage();
-            System.out.println("Inner message type: " + innerMessage.getType());
-            Paxos.AppPropose appProposeMessage = innerMessage.getAppPropose();
-            System.out.println(Arrays.toString(appProposeMessage.getProcessesList().toArray()));
+
+            messageQueue.add(innerMessage);
         } catch (IOException e) {
             e.printStackTrace();
         }

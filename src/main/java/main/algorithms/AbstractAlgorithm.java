@@ -2,27 +2,26 @@ package main.algorithms;
 
 import main.ConsensusSystem;
 import main.Paxos;
-import main.handlers.NetworkHandler;
 
-import java.io.IOException;
-import java.util.List;
+import java.util.UUID;
 
-public class AbstractAlgorithm {
+public abstract class AbstractAlgorithm {
 
-    private final NetworkHandler networkHandler;
-    private final List<Paxos.Message> messageQueue;
+    protected final ConsensusSystem system;
+    protected final String abstractionId;
 
     protected AbstractAlgorithm() {
-        ConsensusSystem system = ConsensusSystem.getInstance();
-        networkHandler = system.getNetworkHandler();
-        messageQueue = system.getMessageQueue();
+        system = ConsensusSystem.getInstance();
+        abstractionId = getAbstractionId();
     }
 
-    protected void addQueueMessage(Paxos.Message message) {
-        messageQueue.add(message);
-    }
+    abstract String getAbstractionId();
 
-    protected void sendNetworkMessage(Paxos.Message message, Paxos.ProcessId destination) throws IOException {
-        networkHandler.sendMessage(message, destination.getHost(), destination.getPort());
+    protected Paxos.Message.Builder builderWithIdentifierFields() {
+        return Paxos.Message
+                .newBuilder()
+                .setSystemId(system.getSystemId())
+                .setAbstractionId(abstractionId)
+                .setMessageUuid(UUID.randomUUID().toString());
     }
 }

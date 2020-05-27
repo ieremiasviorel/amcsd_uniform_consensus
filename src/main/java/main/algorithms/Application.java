@@ -3,7 +3,14 @@ package main.algorithms;
 import main.ConsensusSystem;
 import main.Paxos;
 
+import java.util.HashSet;
+
 public class Application extends AbstractAlgorithm implements Algorithm {
+
+    @Override
+    String getAbstractionId() {
+        return "app";
+    }
 
     @Override
     public boolean canHandle(Paxos.Message message) {
@@ -17,8 +24,7 @@ public class Application extends AbstractAlgorithm implements Algorithm {
 
         ConsensusSystem consensusSystemInstance = ConsensusSystem.getInstance();
 
-        consensusSystemInstance.setProcessList(appPropose.getProcessesList());
-        consensusSystemInstance.setSystemId(message.getSystemId());
+        consensusSystemInstance.setProcesses(new HashSet<>(appPropose.getProcessesList()));
         consensusSystemInstance.initializeDefaultAlgorithms();
     }
 }

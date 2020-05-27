@@ -14,6 +14,7 @@ public class Main {
 
         ConsensusSystem consensusSystem = ConsensusSystem.getInstance();
         consensusSystem.setProcessPort(processPort);
+        consensusSystem.setProcessIndex(processPort % 5000 - 3);
 
         consensusSystem.start();
     }

@@ -1,6 +1,5 @@
 package main.handlers;
 
-import main.ConsensusSystem;
 import main.Paxos;
 
 import java.io.DataOutputStream;

@@ -6,11 +6,10 @@ import main.algorithms.EventuallyPerfectFailureDetector;
 import main.algorithms.PerfectLink;
 import main.handlers.EventLoop;
 import main.handlers.NetworkHandler;
+import main.handlers.TimerHandler;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import static main.Main.HUB_HOST;
@@ -23,11 +22,17 @@ public class ConsensusSystem {
     private final List<Paxos.Message> messageQueue;
     private final List<Algorithm> algorithms;
 
+    private Set<Paxos.ProcessId> processes;
+    private Paxos.ProcessId currentProcess;
     private int processPort;
+    private int processIndex;
+
+    private final String systemId;
+    private final String owner;
+
     private EventLoop eventLoop;
     private NetworkHandler networkHandler;
-    private List<Paxos.ProcessId> processList;
-    private String systemId;
+    private TimerHandler timerHandler;
 
     public static ConsensusSystem getInstance() {
         if (instance == null)
@@ -39,13 +44,14 @@ public class ConsensusSystem {
     private ConsensusSystem() {
         this.messageQueue = new CopyOnWriteArrayList<>();
         this.algorithms = new CopyOnWriteArrayList<>();
-        this.processList = new ArrayList<>();
+        this.processes = new HashSet<>();
+        this.systemId = "sys-1";
+        this.owner = "iv";
     }
 
     public void start() throws IOException {
         /**
-         * Instantiate the {@link Application} algorithm and
-         * add it to the algorithms list
+         * Instantiate the {@link Application} algorithm and add it to the algorithms list
          */
         Application application = new Application();
         algorithms.add(application);
@@ -63,6 +69,11 @@ public class ConsensusSystem {
         networkHandler.start();
 
         /**
+         * Instantiate the {@link TimerHandler}
+         */
+        timerHandler = new TimerHandler(messageQueue);
+
+        /**
          * Register the node with the HUB
          */
         registerToHub();
@@ -71,20 +82,20 @@ public class ConsensusSystem {
     private void registerToHub() throws IOException {
         Paxos.AppRegistration appRegistration = Paxos.AppRegistration
                 .newBuilder()
-                .setOwner("IV")
-                .setIndex(getProcessIndex(processPort))
+                .setOwner(owner)
+                .setIndex(processIndex)
                 .build();
 
         Paxos.Message innerMessage = Paxos.Message
                 .newBuilder()
                 .setType(Paxos.Message.Type.APP_REGISTRATION)
                 .setAppRegistration(appRegistration)
+                .setSystemId(systemId)
                 .setAbstractionId("app")
-                .setMessageUuid("")
-                .setSystemId("sys-1")
+                .setMessageUuid(UUID.randomUUID().toString())
                 .build();
 
-        this.sendMessage(innerMessage, HUB_HOST, HUB_PORT);
+        this.sendMessageOverTheNetwork(innerMessage, HUB_HOST, HUB_PORT);
     }
 
     public void initializeDefaultAlgorithms() {
@@ -92,12 +103,8 @@ public class ConsensusSystem {
         algorithms.add(new EventuallyPerfectFailureDetector());
     }
 
-    public void sendMessage(Paxos.Message message, String receiverHost, int receiverPort) throws IOException {
-        this.networkHandler.sendMessage(message, receiverHost, receiverPort);
-    }
-
     public Paxos.ProcessId getProcessIdByPort(int port) {
-        Optional<Paxos.ProcessId> processIdOptional = processList
+        Optional<Paxos.ProcessId> processIdOptional = processes
                 .stream()
                 .filter(processId -> processId.getPort() == port)
                 .findFirst();
@@ -105,35 +112,49 @@ public class ConsensusSystem {
         return processIdOptional.orElse(null);
     }
 
-    public List<Paxos.ProcessId> getProcessList() {
-        return processList;
+    public Set<Paxos.ProcessId> getProcesses() {
+        return processes;
     }
 
-    public void setProcessList(List<Paxos.ProcessId> processList) {
-        this.processList = processList;
+    public void sendMessageOverTheNetwork(Paxos.Message message, String host, int port) throws IOException {
+        this.networkHandler.sendMessage(message, host, port);
+    }
+
+    public void addMessageToQueue(Paxos.Message message) {
+        this.messageQueue.add(message);
+    }
+
+    public void setTimer(int time, Paxos.Message.Type type) {
+        this.timerHandler.setTimer(time, type);
+    }
+
+    public void setProcesses(Set<Paxos.ProcessId> processes) {
+        this.processes = processes;
+        this.currentProcess = getProcessIdByPort(processPort);
     }
 
     public void setProcessPort(int processPort) {
         this.processPort = processPort;
     }
 
-    public NetworkHandler getNetworkHandler() {
-        return networkHandler;
-    }
-
-    public List<Paxos.Message> getMessageQueue() {
-        return messageQueue;
-    }
-
-    public int getProcessIndex(int processPort) {
-        return (processPort % 5000) - 3;
+    public void setProcessIndex(int processIndex) {
+        this.processIndex = processIndex;
     }
 
     public String getSystemId() {
         return systemId;
     }
 
-    public void setSystemId(String systemId) {
-        this.systemId = systemId;
+    public Paxos.ProcessId getMaxRank(Set<Paxos.ProcessId> processes) {
+        List<Paxos.ProcessId> processesList = new ArrayList<>(processes);
+
+        processesList.sort(new Comparator<Paxos.ProcessId>() {
+            @Override
+            public int compare(Paxos.ProcessId o1, Paxos.ProcessId o2) {
+                return o2.getRank() - o1.getRank();
+            }
+        });
+
+        return processesList.get(0);
     }
 }

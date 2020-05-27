@@ -7,8 +7,9 @@ import java.io.IOException;
 import java.util.List;
 
 public class EventLoop extends Thread {
-    public final List<Paxos.Message> messageQueue;
-    public final List<Algorithm> algorithms;
+
+    private final List<Paxos.Message> messageQueue;
+    private final List<Algorithm> algorithms;
 
     public EventLoop(List<Paxos.Message> messageQueue, List<Algorithm> algorithms) {
         this.messageQueue = messageQueue;
@@ -22,7 +23,7 @@ public class EventLoop extends Thread {
                 algorithms.forEach(algorithm -> {
                     try {
                         if (algorithm.handle(message)) {
-                            System.out.println("[" + messageQueue.size() + "] Message " + message.getMessageUuid() + " [" + getMeaningfulMessageType(message) + "] handled by " + algorithm.getClass().getSimpleName());
+                            logMessageInfo(message, algorithm);
                             messageQueue.remove(message);
                         }
                     } catch (IOException e) {
@@ -33,7 +34,16 @@ public class EventLoop extends Thread {
         }
     }
 
-    private Paxos.Message.Type getMeaningfulMessageType(Paxos.Message message) {
+    private void logMessageInfo(Paxos.Message message, Algorithm algorithm) {
+        if (getPayloadMessageType(message) != Paxos.Message.Type.EPFD_HEARTBEAT_REQUEST &&
+                getPayloadMessageType(message) != Paxos.Message.Type.EPFD_HEARTBEAT_REPLY) {
+            System.out.println("[" + messageQueue.size() + "] Message " +
+                    message.getMessageUuid() + " [" + getPayloadMessageType(message) +
+                    "] handled by " + algorithm.getClass().getSimpleName());
+        }
+    }
+
+    private Paxos.Message.Type getPayloadMessageType(Paxos.Message message) {
         if (message.getType() == Paxos.Message.Type.PL_DELIVER) {
             return message.getPlDeliver().getMessage().getType();
         } else if (message.getType() == Paxos.Message.Type.PL_SEND) {

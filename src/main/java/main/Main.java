@@ -12,7 +12,8 @@ public class Main {
 
         int processPort = Integer.parseInt(args[0]);
 
-        ConsensusSystem consensusSystem = new ConsensusSystem(processPort);
+        ConsensusSystem consensusSystem = ConsensusSystem.getInstance();
+        consensusSystem.setProcessPort(processPort);
 
         consensusSystem.start();
     }

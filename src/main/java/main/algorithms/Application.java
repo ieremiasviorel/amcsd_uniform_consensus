@@ -9,10 +9,10 @@ public class Application implements Algorithm {
     public boolean handle(Paxos.Message message) {
         if (message.getType() == Paxos.Message.Type.APP_PROPOSE) {
             Paxos.AppPropose appPropose = message.getAppPropose();
-            ConsensusSystem.setProcessList(appPropose.getProcessesList());
-
+            ConsensusSystem.getInstance().setProcessList(appPropose.getProcessesList());
             return true;
+        } else {
+            return false;
         }
-        return false;
     }
 }

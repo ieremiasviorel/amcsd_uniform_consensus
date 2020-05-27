@@ -5,16 +5,15 @@ import main.Paxos;
 import java.io.DataInputStream;
 import java.io.IOException;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.List;
 
-public class NetworkClientHandler extends Thread {
+public class IncomingMessageHandler extends Thread {
 
     private final Socket clientSocket;
     private final List<Paxos.Message> messageQueue;
     private final DataInputStream dIn;
 
-    public NetworkClientHandler(Socket clientSocket, List<Paxos.Message> messageQueue) throws IOException {
+    public IncomingMessageHandler(Socket clientSocket, List<Paxos.Message> messageQueue) throws IOException {
         this.clientSocket = clientSocket;
         this.messageQueue = messageQueue;
         this.dIn = new DataInputStream(this.clientSocket.getInputStream());
@@ -42,6 +41,7 @@ public class NetworkClientHandler extends Thread {
             Paxos.Message innerMessage = networkMessage.getMessage();
 
             messageQueue.add(innerMessage);
+
         } catch (IOException e) {
             e.printStackTrace();
         }

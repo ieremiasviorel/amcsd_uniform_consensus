@@ -2,13 +2,16 @@ package main;
 
 import main.algorithms.Algorithm;
 import main.algorithms.Application;
+import main.algorithms.EventuallyPerfectFailureDetector;
+import main.algorithms.PerfectLink;
 import main.handlers.EventLoop;
 import main.handlers.NetworkHandler;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static main.Main.HUB_HOST;
 import static main.Main.HUB_PORT;
@@ -24,6 +27,7 @@ public class ConsensusSystem {
     private EventLoop eventLoop;
     private NetworkHandler networkHandler;
     private List<Paxos.ProcessId> processList;
+    private String systemId;
 
     public static ConsensusSystem getInstance() {
         if (instance == null)
@@ -33,8 +37,9 @@ public class ConsensusSystem {
     }
 
     private ConsensusSystem() {
-        this.messageQueue = Collections.synchronizedList(new ArrayList<>());
-        this.algorithms = new ArrayList<>();
+        this.messageQueue = new CopyOnWriteArrayList<>();
+        this.algorithms = new CopyOnWriteArrayList<>();
+        this.processList = new ArrayList<>();
     }
 
     public void start() throws IOException {
@@ -75,15 +80,29 @@ public class ConsensusSystem {
                 .setType(Paxos.Message.Type.APP_REGISTRATION)
                 .setAppRegistration(appRegistration)
                 .setAbstractionId("app")
-                .setMessageUuid("appRegistration")
-                .setSystemId("ref-" + getProcessIndex(processPort))
+                .setMessageUuid("")
+                .setSystemId("sys-1")
                 .build();
 
         this.sendMessage(innerMessage, HUB_HOST, HUB_PORT);
     }
 
-    private int getProcessIndex(int processPort) {
-        return (processPort % 5000) - 3;
+    public void initializeDefaultAlgorithms() {
+        algorithms.add(new PerfectLink());
+        algorithms.add(new EventuallyPerfectFailureDetector());
+    }
+
+    public void sendMessage(Paxos.Message message, String receiverHost, int receiverPort) throws IOException {
+        this.networkHandler.sendMessage(message, receiverHost, receiverPort);
+    }
+
+    public Paxos.ProcessId getProcessIdByPort(int port) {
+        Optional<Paxos.ProcessId> processIdOptional = processList
+                .stream()
+                .filter(processId -> processId.getPort() == port)
+                .findFirst();
+
+        return processIdOptional.orElse(null);
     }
 
     public List<Paxos.ProcessId> getProcessList() {
@@ -94,16 +113,27 @@ public class ConsensusSystem {
         this.processList = processList;
     }
 
-    public void sendMessage(Paxos.Message message, String receiverHost, int receiverPort) throws IOException {
-        this.networkHandler.sendMessage(message, receiverHost, receiverPort);
-    }
-
-
-    public int getProcessPort() {
-        return processPort;
-    }
-
     public void setProcessPort(int processPort) {
         this.processPort = processPort;
+    }
+
+    public NetworkHandler getNetworkHandler() {
+        return networkHandler;
+    }
+
+    public List<Paxos.Message> getMessageQueue() {
+        return messageQueue;
+    }
+
+    public int getProcessIndex(int processPort) {
+        return (processPort % 5000) - 3;
+    }
+
+    public String getSystemId() {
+        return systemId;
+    }
+
+    public void setSystemId(String systemId) {
+        this.systemId = systemId;
     }
 }

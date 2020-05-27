@@ -1,5 +1,6 @@
 package main.handlers;
 
+import main.ConsensusSystem;
 import main.Paxos;
 
 import java.io.DataInputStream;
@@ -30,18 +31,41 @@ public class IncomingMessageHandler extends Thread {
                 throw new RuntimeException("Network has incorrect size: expected = " + messageSize + ", actual = " + readMessageSize);
             }
 
-            Paxos.Message outerMessage = Paxos.Message.parseFrom(byteBuffer);
+            Paxos.Message receivedOuterMessage = Paxos.Message.parseFrom(byteBuffer);
 
-            if (outerMessage.getType() != Paxos.Message.Type.NETWORK_MESSAGE) {
-                throw new RuntimeException("Network message has incorrect type: expected = " + Paxos.Message.Type.NETWORK_MESSAGE + ", actual size " + outerMessage.getType());
+            if (receivedOuterMessage.getType() != Paxos.Message.Type.NETWORK_MESSAGE) {
+                throw new RuntimeException("Network message has incorrect type: expected = " + Paxos.Message.Type.NETWORK_MESSAGE + ", actual size " + receivedOuterMessage.getType());
             }
 
-            Paxos.NetworkMessage networkMessage = outerMessage.getNetworkMessage();
+            Paxos.NetworkMessage receivedNetworkMessage = receivedOuterMessage.getNetworkMessage();
 
-            Paxos.Message innerMessage = networkMessage.getMessage();
+            Paxos.Message receivedInnerMessage = receivedNetworkMessage.getMessage();
 
-            messageQueue.add(innerMessage);
+            Paxos.PlDeliver processedPlDeliver;
 
+            Paxos.ProcessId senderProcessId = findProcessId(receivedNetworkMessage.getSenderListeningPort());
+            if (senderProcessId != null) {
+                processedPlDeliver = Paxos.PlDeliver
+                        .newBuilder()
+                        .setMessage(receivedInnerMessage)
+                        .setSender(senderProcessId)
+                        .build();
+            } else {
+                processedPlDeliver = Paxos.PlDeliver
+                        .newBuilder()
+                        .setMessage(receivedInnerMessage)
+                        .build();
+            }
+
+            Paxos.Message processedOuterMessage = Paxos.Message
+                    .newBuilder()
+                    .setSystemId(receivedOuterMessage.getSystemId())
+                    .setAbstractionId(receivedOuterMessage.getAbstractionId())
+                    .setType(Paxos.Message.Type.PL_DELIVER)
+                    .setPlDeliver(processedPlDeliver)
+                    .build();
+
+            messageQueue.add(processedOuterMessage);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -56,5 +80,9 @@ public class IncomingMessageHandler extends Thread {
     private void close() throws IOException {
         dIn.close();
         clientSocket.close();
+    }
+
+    private Paxos.ProcessId findProcessId(int port) {
+        return ConsensusSystem.getInstance().getProcessIdByPort(port);
     }
 }

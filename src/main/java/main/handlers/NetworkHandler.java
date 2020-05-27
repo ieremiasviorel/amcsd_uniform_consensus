@@ -1,5 +1,6 @@
 package main.handlers;
 
+import main.ConsensusSystem;
 import main.Paxos;
 
 import java.io.DataOutputStream;
@@ -8,7 +9,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.List;
 
-import static main.Main.*;
+import static main.Main.PROCESS_HOST;
 
 public class NetworkHandler extends Thread {
 
@@ -35,14 +36,13 @@ public class NetworkHandler extends Thread {
 
         Paxos.Message outerMessage = Paxos.Message
                 .newBuilder()
-                .setSystemId(message.getSystemId())
+                .setSystemId("sys-1")
                 .setAbstractionId(message.getAbstractionId())
                 .setType(Paxos.Message.Type.NETWORK_MESSAGE)
                 .setNetworkMessage(networkMessage)
                 .build();
 
         byte[] encodedMessage = outerMessage.toByteArray();
-
         Socket sendSocket = new Socket(receiverHost, receiverPort);
         DataOutputStream dOut = new DataOutputStream(sendSocket.getOutputStream());
 

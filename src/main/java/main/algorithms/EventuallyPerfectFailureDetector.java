@@ -104,10 +104,10 @@ public class EventuallyPerfectFailureDetector extends AbstractAlgorithm implemen
         system.getProcesses().forEach(processId -> {
             if (!SetOperations.belongs(processId, alive) && !SetOperations.belongs(processId, suspected)) {
                 suspected.add(processId);
-                triggerSuspectIndication(processId);
+                triggerEpfdSuspectIndication(processId);
             } else if (SetOperations.belongs(processId, alive) && SetOperations.belongs(processId, suspected)) {
                 suspected.remove(processId);
-                triggerRestoreIndication(processId);
+                triggerEpfdRestoreIndication(processId);
             }
             sendHeartbeatRequest(processId);
         });
@@ -116,7 +116,7 @@ public class EventuallyPerfectFailureDetector extends AbstractAlgorithm implemen
         system.setTimer(delay, Paxos.Message.Type.EPFD_TIMEOUT);
     }
 
-    private void triggerSuspectIndication(Paxos.ProcessId processId) {
+    private void triggerEpfdSuspectIndication(Paxos.ProcessId processId) {
         Paxos.EpfdSuspect epfdSuspect = Paxos.EpfdSuspect
                 .newBuilder()
                 .setProcess(processId)
@@ -130,7 +130,7 @@ public class EventuallyPerfectFailureDetector extends AbstractAlgorithm implemen
         system.addMessageToQueue(outerMessage);
     }
 
-    private void triggerRestoreIndication(Paxos.ProcessId processId) {
+    private void triggerEpfdRestoreIndication(Paxos.ProcessId processId) {
         Paxos.EpfdRestore epfdRestore = Paxos.EpfdRestore
                 .newBuilder()
                 .setProcess(processId)

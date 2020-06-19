@@ -50,6 +50,16 @@ public class IncomingMessageHandler extends Thread {
 
             Paxos.ProcessId senderProcessId = findProcessId(receivedNetworkMessage.getSenderListeningPort());
 
+            /**
+             * If messages are added to the queue before the process list is initialized ({@link AppPropose} event was
+             * already processed), the {@link ProcessId} the sender cannot be determined and the `sender` field in
+             * {@link PlDeliver} cannot be populated
+             */
+            while (senderProcessId == null && receivedInnerMessage.getType() != Paxos.Message.Type.APP_PROPOSE) {
+                Thread.sleep(1000);
+                senderProcessId = findProcessId(receivedNetworkMessage.getSenderListeningPort());
+            }
+
             if (senderProcessId != null) {
                 processedPlDeliver = Paxos.PlDeliver
                         .newBuilder()
@@ -72,7 +82,7 @@ public class IncomingMessageHandler extends Thread {
                     .build();
 
             ConsensusSystem.getInstance().addMessageToQueue(processedOuterMessage);
-        } catch (IOException e) {
+        } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
 

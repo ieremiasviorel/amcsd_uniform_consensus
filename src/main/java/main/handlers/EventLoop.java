@@ -39,7 +39,8 @@ public class EventLoop extends Thread {
 
     private void logMessageInfo(Paxos.Message message, Algorithm algorithm) {
         if (getPayloadMessageType(message) != Paxos.Message.Type.EPFD_HEARTBEAT_REQUEST &&
-                getPayloadMessageType(message) != Paxos.Message.Type.EPFD_HEARTBEAT_REPLY) {
+                getPayloadMessageType(message) != Paxos.Message.Type.EPFD_HEARTBEAT_REPLY
+                && message.getType() != Paxos.Message.Type.EPFD_TIMEOUT) {
             System.out.println(Main.ANSI_GREEN + "HANDLED:   " +
                     getPrintableMessageType(message) + " => " + algorithm.getClass().getSimpleName() + Main.ANSI_RESET);
         }

@@ -97,8 +97,11 @@ public class ConsensusSystem {
 
     public void initializeDefaultAlgorithms() {
         algorithms.add(new PerfectLink());
+        algorithms.add(new BestEffortBroadcast());
         algorithms.add(new EventuallyPerfectFailureDetector());
         algorithms.add(new EventualLeaderDetector());
+        algorithms.add(new EpochChange());
+        algorithms.add(new UniformConsensus());
     }
 
     public Paxos.ProcessId getProcessIdByPort(int port) {
@@ -112,6 +115,10 @@ public class ConsensusSystem {
 
     public Set<Paxos.ProcessId> getProcesses() {
         return processes;
+    }
+
+    public Paxos.ProcessId getCurrentProcess() {
+        return currentProcess;
     }
 
     public void sendMessageOverTheNetwork(Paxos.Message message, String host, int port) throws IOException {
@@ -154,7 +161,9 @@ public class ConsensusSystem {
     }
 
     private void logMessageType(Paxos.Message message) {
-        if (message.getType() == Paxos.Message.Type.PL_SEND) {
+        if (message.getType() == Paxos.Message.Type.EPFD_TIMEOUT) {
+
+        } else if (message.getType() == Paxos.Message.Type.PL_SEND) {
             if (message.getPlSend().getMessage().getType() == Paxos.Message.Type.EPFD_HEARTBEAT_REQUEST ||
                     message.getPlSend().getMessage().getType() == Paxos.Message.Type.EPFD_HEARTBEAT_REPLY) {
 

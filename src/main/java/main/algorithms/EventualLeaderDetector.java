@@ -66,11 +66,11 @@ public class EventualLeaderDetector extends AbstractAlgorithm implements Algorit
         if (!maxRankNotSuspectedProcess.equals(leader)) {
             leader = maxRankNotSuspectedProcess;
 
-            triggerTrustIndication();
+            triggerEldTrustIndication();
         }
     }
 
-    private void triggerTrustIndication() {
+    private void triggerEldTrustIndication() {
         Paxos.EldTrust eldTrust = Paxos.EldTrust
                 .newBuilder()
                 .setProcess(leader)

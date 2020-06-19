@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Node2" type="JarApplication">
+    <option name="JAR_PATH" value="$PROJECT_DIR$/build/libs/amcsd_uniform_consensus.jar" />
+    <option name="PROGRAM_PARAMETERS" value="5005" />
+    <option name="WORKING_DIRECTORY" value="D:\IV\Documente\Master\An 1\Sem. II\Algoritmi, Modele si Concepte in Sisteme Distribuite\Laboratories\amcsd_uniform_consensus" />
+    <option name="ALTERNATIVE_JRE_PATH" />
+    <method v="2" />
+  </configuration>
+</component>

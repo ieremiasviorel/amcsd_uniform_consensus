@@ -1,10 +1,13 @@
 package main.handlers;
 
+import main.Main;
 import main.Paxos;
 import main.algorithms.Algorithm;
 
 import java.io.IOException;
 import java.util.List;
+
+import static main.Main.getPrintableMessageType;
 
 public class EventLoop extends Thread {
 
@@ -37,9 +40,8 @@ public class EventLoop extends Thread {
     private void logMessageInfo(Paxos.Message message, Algorithm algorithm) {
         if (getPayloadMessageType(message) != Paxos.Message.Type.EPFD_HEARTBEAT_REQUEST &&
                 getPayloadMessageType(message) != Paxos.Message.Type.EPFD_HEARTBEAT_REPLY) {
-            System.out.println("[" + messageQueue.size() + "] Message " +
-                    message.getMessageUuid() + " [" + getPayloadMessageType(message) +
-                    "] handled by " + algorithm.getClass().getSimpleName());
+            System.out.println(Main.ANSI_GREEN + "HANDLED:   " +
+                    getPrintableMessageType(message) + " => " + algorithm.getClass().getSimpleName() + Main.ANSI_RESET);
         }
     }
 

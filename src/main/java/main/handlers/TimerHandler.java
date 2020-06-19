@@ -1,18 +1,16 @@
 package main.handlers;
 
+import main.ConsensusSystem;
 import main.Paxos;
 
-import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 public class TimerHandler {
-    private final List<Paxos.Message> messageQueue;
     private final Timer timer;
 
 
-    public TimerHandler(List<Paxos.Message> messageQueue) {
-        this.messageQueue = messageQueue;
+    public TimerHandler() {
         timer = new Timer();
     }
 
@@ -22,7 +20,7 @@ public class TimerHandler {
                     @Override
                     public void run() {
                         Paxos.Message message = buildTimerMessage(type);
-                        messageQueue.add(message);
+                        ConsensusSystem.getInstance().addMessageToQueue(message);
                     }
                 },
                 time

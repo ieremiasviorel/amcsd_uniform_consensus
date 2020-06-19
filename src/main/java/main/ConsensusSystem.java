@@ -1,9 +1,6 @@
 package main;
 
-import main.algorithms.Algorithm;
-import main.algorithms.Application;
-import main.algorithms.EventuallyPerfectFailureDetector;
-import main.algorithms.PerfectLink;
+import main.algorithms.*;
 import main.handlers.EventLoop;
 import main.handlers.NetworkHandler;
 import main.handlers.TimerHandler;
@@ -65,13 +62,13 @@ public class ConsensusSystem {
         /**
          * Instantiate and start the {@link NetworkHandler}
          */
-        networkHandler = new NetworkHandler(processPort, messageQueue);
+        networkHandler = new NetworkHandler(processPort);
         networkHandler.start();
 
         /**
          * Instantiate the {@link TimerHandler}
          */
-        timerHandler = new TimerHandler(messageQueue);
+        timerHandler = new TimerHandler();
 
         /**
          * Register the node with the HUB
@@ -86,7 +83,7 @@ public class ConsensusSystem {
                 .setIndex(processIndex)
                 .build();
 
-        Paxos.Message innerMessage = Paxos.Message
+        Paxos.Message outerMessage = Paxos.Message
                 .newBuilder()
                 .setType(Paxos.Message.Type.APP_REGISTRATION)
                 .setAppRegistration(appRegistration)
@@ -95,12 +92,13 @@ public class ConsensusSystem {
                 .setMessageUuid(UUID.randomUUID().toString())
                 .build();
 
-        this.sendMessageOverTheNetwork(innerMessage, HUB_HOST, HUB_PORT);
+        this.sendMessageOverTheNetwork(outerMessage, HUB_HOST, HUB_PORT);
     }
 
     public void initializeDefaultAlgorithms() {
         algorithms.add(new PerfectLink());
         algorithms.add(new EventuallyPerfectFailureDetector());
+        algorithms.add(new EventualLeaderDetector());
     }
 
     public Paxos.ProcessId getProcessIdByPort(int port) {
@@ -121,6 +119,8 @@ public class ConsensusSystem {
     }
 
     public void addMessageToQueue(Paxos.Message message) {
+        logMessageType(message);
+
         this.messageQueue.add(message);
     }
 
@@ -148,13 +148,29 @@ public class ConsensusSystem {
     public Paxos.ProcessId getMaxRank(Set<Paxos.ProcessId> processes) {
         List<Paxos.ProcessId> processesList = new ArrayList<>(processes);
 
-        processesList.sort(new Comparator<Paxos.ProcessId>() {
-            @Override
-            public int compare(Paxos.ProcessId o1, Paxos.ProcessId o2) {
-                return o2.getRank() - o1.getRank();
-            }
-        });
+        processesList.sort((o1, o2) -> o2.getRank() - o1.getRank());
 
         return processesList.get(0);
+    }
+
+    private void logMessageType(Paxos.Message message) {
+        if (message.getType() == Paxos.Message.Type.PL_SEND) {
+            if (message.getPlSend().getMessage().getType() == Paxos.Message.Type.EPFD_HEARTBEAT_REQUEST ||
+                    message.getPlSend().getMessage().getType() == Paxos.Message.Type.EPFD_HEARTBEAT_REPLY) {
+
+            } else {
+                System.out.println(Main.ANSI_YELLOW + "QUEUE ADD: PL_SEND[" + message.getPlSend().getMessage().getType() + "]" + Main.ANSI_RESET);
+            }
+        } else if (message.getType() == Paxos.Message.Type.PL_DELIVER) {
+            if (message.getPlDeliver().getMessage().getType() == Paxos.Message.Type.EPFD_HEARTBEAT_REQUEST ||
+                    message.getPlDeliver().getMessage().getType() == Paxos.Message.Type.EPFD_HEARTBEAT_REPLY) {
+            } else {
+                System.out.println(Main.ANSI_YELLOW + "QUEUE ADD: PL_DELIVER[" + message.getPlDeliver().getMessage().getType() + "]" + Main.ANSI_RESET);
+            }
+        } else if (message.getType() == Paxos.Message.Type.NETWORK_MESSAGE) {
+            System.out.println(Main.ANSI_YELLOW + "QUEUE ADD: NETWORK[" + message.getNetworkMessage().getMessage().getType() + "]" + Main.ANSI_RESET);
+        } else {
+            System.out.println(Main.ANSI_YELLOW + "QUEUE ADD: " + message.getType() + Main.ANSI_RESET);
+        }
     }
 }

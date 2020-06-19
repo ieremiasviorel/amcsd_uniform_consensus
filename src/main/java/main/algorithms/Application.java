@@ -1,6 +1,5 @@
 package main.algorithms;
 
-import main.ConsensusSystem;
 import main.Paxos;
 
 import java.util.HashSet;
@@ -22,9 +21,7 @@ public class Application extends AbstractAlgorithm implements Algorithm {
     public void doHandle(Paxos.Message message) {
         Paxos.AppPropose appPropose = message.getPlDeliver().getMessage().getAppPropose();
 
-        ConsensusSystem consensusSystemInstance = ConsensusSystem.getInstance();
-
-        consensusSystemInstance.setProcesses(new HashSet<>(appPropose.getProcessesList()));
-        consensusSystemInstance.initializeDefaultAlgorithms();
+        system.setProcesses(new HashSet<>(appPropose.getProcessesList()));
+        system.initializeDefaultAlgorithms();
     }
 }

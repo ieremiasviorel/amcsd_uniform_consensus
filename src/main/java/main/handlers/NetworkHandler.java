@@ -6,21 +6,18 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.List;
 
 import static main.Main.PROCESS_HOST;
 
 public class NetworkHandler extends Thread {
 
     private final int processPort;
-    private final List<Paxos.Message> messageQueue;
     private final ServerSocket serverSocket;
 
     private boolean acceptClientRequests;
 
-    public NetworkHandler(int processPort, List<Paxos.Message> messageQueue) throws IOException {
+    public NetworkHandler(int processPort) throws IOException {
         this.processPort = processPort;
-        this.messageQueue = messageQueue;
         this.serverSocket = new ServerSocket(processPort);
         this.acceptClientRequests = true;
     }
@@ -72,7 +69,7 @@ public class NetworkHandler extends Thread {
         while (acceptClientRequests) {
             Socket clientSocket = serverSocket.accept();
             IncomingMessageHandler incomingMessageHandler =
-                    new IncomingMessageHandler(clientSocket, messageQueue);
+                    new IncomingMessageHandler(clientSocket);
             incomingMessageHandler.start();
         }
     }

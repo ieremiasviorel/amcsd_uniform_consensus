@@ -119,9 +119,9 @@ public class ConsensusSystem {
     }
 
     public void addMessageToQueue(Paxos.Message message) {
-        logMessageType(message);
-
         this.messageQueue.add(message);
+
+        logMessageType(message);
     }
 
     public void setTimer(int time, Paxos.Message.Type type) {

@@ -13,6 +13,9 @@ public class Application extends AbstractAlgorithm implements Algorithm {
 
     @Override
     public boolean canHandle(Paxos.Message message) {
+        /**
+         * 1. APP_PROPOSE wrapped in a PL_DELIVER
+         */
         return message.getType() == Paxos.Message.Type.PL_DELIVER &&
                 message.getPlDeliver().getMessage().getType() == Paxos.Message.Type.APP_PROPOSE;
     }

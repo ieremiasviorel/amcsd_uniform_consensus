@@ -43,6 +43,7 @@ public class UniformConsensus extends AbstractAlgorithm implements Algorithm {
         EpochConsensusState ep0State = new EpochConsensusState(ep0StateValue, 0);
         EpochConsensus ep0 = new EpochConsensus(ep0State, l, ets);
         system.addAlgorithm(ep0);
+        handleInternalEvent();
     }
 
     @Override
@@ -80,6 +81,7 @@ public class UniformConsensus extends AbstractAlgorithm implements Algorithm {
     private void handleUcPropose(Paxos.Message message) {
         Paxos.UcPropose ucPropose = message.getUcPropose();
         val = ucPropose.getValue();
+        handleInternalEvent();
     }
 
     private void handleEcStartEpoch(Paxos.Message message) {
@@ -100,6 +102,7 @@ public class UniformConsensus extends AbstractAlgorithm implements Algorithm {
         EpochConsensusState eptsState = new EpochConsensusState(epAborted.getValue(), epAborted.getValueTimestamp());
         EpochConsensus epts = new EpochConsensus(eptsState, l, ets);
         system.addAlgorithm(epts);
+        handleInternalEvent();
     }
 
     private void handleEpDecide(Paxos.Message message) {
@@ -111,10 +114,33 @@ public class UniformConsensus extends AbstractAlgorithm implements Algorithm {
         }
     }
 
+    /**
+     * INTERNAL EVENTS
+     */
     private void handleInternalEvent() {
         if (l.equals(system.getCurrentProcess()) && val.getDefined() && !proposed) {
             proposed = true;
+            sendEptsPropose();
         }
+    }
+
+    /**
+     * SENDS AND BROADCASTS
+     */
+    private void sendEptsPropose() {
+        Paxos.EpPropose epPropose = Paxos.EpPropose
+                .newBuilder()
+                .setValue(val)
+                .build();
+
+        Paxos.Message outerMessage = Paxos.Message
+                .newBuilder()
+                .setAbstractionId("ep" + ets)
+                .setType(Paxos.Message.Type.EP_PROPOSE)
+                .setEpPropose(epPropose)
+                .build();
+
+        system.addMessageToQueue(outerMessage);
     }
 
     private void sendEptsAbort() {
@@ -132,6 +158,9 @@ public class UniformConsensus extends AbstractAlgorithm implements Algorithm {
         system.addMessageToQueue(outerMessage);
     }
 
+    /**
+     * INDICATIONS
+     */
     private void triggerUcDecideIndication(Paxos.Value value) {
         Paxos.UcDecide ucDecide = Paxos.UcDecide
                 .newBuilder()

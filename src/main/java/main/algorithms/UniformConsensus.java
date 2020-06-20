@@ -1,6 +1,5 @@
 package main.algorithms;
 
-import main.Main;
 import main.Paxos;
 import main.utils.EpochConsensusState;
 
@@ -85,13 +84,8 @@ public class UniformConsensus extends AbstractAlgorithm implements Algorithm {
 
     private void handleEcStartEpoch(Paxos.Message message) {
         Paxos.EcStartEpoch ecStartEpoch = message.getEcStartEpoch();
-
         newl = ecStartEpoch.getNewLeader();
         newts = ecStartEpoch.getNewTimestamp();
-
-        System.out.println(Main.ANSI_CYAN + ets + Main.ANSI_RESET);
-        System.out.println(Main.ANSI_CYAN + "START EPOCH: leader " + ecStartEpoch.getNewLeader().getPort() + ", timeStamp:" + ecStartEpoch.getNewTimestamp() + Main.ANSI_RESET);
-
         sendEptsAbort();
     }
 

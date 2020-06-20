@@ -1,6 +1,5 @@
 package main.algorithms;
 
-import main.Main;
 import main.Paxos;
 
 import java.io.IOException;
@@ -67,8 +66,6 @@ public class Application extends AbstractAlgorithm implements Algorithm {
     private void handleUcDecide(Paxos.Message message) {
         Paxos.UcDecide ucDecide = message.getUcDecide();
         Paxos.Value value = ucDecide.getValue();
-
-        System.out.println(Main.ANSI_WHITE + "UC DECIDE " + value.getV() + Main.ANSI_RESET);
 
         Paxos.AppDecide appDecide = Paxos.AppDecide
                 .newBuilder()

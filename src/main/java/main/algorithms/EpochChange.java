@@ -1,6 +1,5 @@
 package main.algorithms;
 
-import main.Main;
 import main.Paxos;
 
 /**
@@ -58,8 +57,6 @@ public class EpochChange extends AbstractAlgorithm implements Algorithm {
     private void handleEldTrust(Paxos.Message message) {
         Paxos.ProcessId eldTrusted = message.getEldTrust().getProcess();
         trusted = eldTrusted;
-
-        System.out.println(Main.ANSI_CYAN + system.getCurrentProcess().getPort() + " | " + eldTrusted.getPort() + Main.ANSI_RESET);
 
         if (system.getCurrentProcess().equals(eldTrusted)) {
             ts += system.getProcesses().size();

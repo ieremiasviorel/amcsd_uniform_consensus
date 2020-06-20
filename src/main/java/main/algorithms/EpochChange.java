@@ -14,14 +14,10 @@ public class EpochChange extends AbstractAlgorithm implements Algorithm {
     int ts;
 
     public EpochChange() {
+        super("ec");
         trusted = system.getMaxRank(system.getProcesses());
         lastts = 0;
         ts = system.getCurrentProcess().getRank();
-    }
-
-    @Override
-    String getAbstractionId() {
-        return "ec";
     }
 
     @Override

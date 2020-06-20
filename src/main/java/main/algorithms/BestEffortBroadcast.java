@@ -5,9 +5,9 @@ import main.Paxos;
 import java.io.IOException;
 
 public class BestEffortBroadcast extends AbstractAlgorithm implements Algorithm {
-    @Override
-    String getAbstractionId() {
-        return "beb";
+
+    public BestEffortBroadcast() {
+        super("beb");
     }
 
     @Override
@@ -25,6 +25,7 @@ public class BestEffortBroadcast extends AbstractAlgorithm implements Algorithm 
                     .build();
 
             Paxos.Message outerMessage = builderWithIdentifierFields()
+                    .setAbstractionId("beb")
                     .setType(Paxos.Message.Type.PL_SEND)
                     .setPlSend(plSend)
                     .build();

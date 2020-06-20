@@ -16,13 +16,9 @@ public class EventualLeaderDetector extends AbstractAlgorithm implements Algorit
     private Paxos.ProcessId leader;
 
     public EventualLeaderDetector() {
+        super("eld");
         suspected = new HashSet<>();
         leader = null;
-    }
-
-    @Override
-    String getAbstractionId() {
-        return "eld";
     }
 
     @Override

@@ -10,12 +10,10 @@ public abstract class AbstractAlgorithm {
     protected final ConsensusSystem system;
     protected final String abstractionId;
 
-    protected AbstractAlgorithm() {
-        system = ConsensusSystem.getInstance();
-        abstractionId = getAbstractionId();
+    protected AbstractAlgorithm(String abstractionId) {
+        this.system = ConsensusSystem.getInstance();
+        this.abstractionId = abstractionId;
     }
-
-    abstract String getAbstractionId();
 
     protected Paxos.Message.Builder builderWithIdentifierFields() {
         return Paxos.Message

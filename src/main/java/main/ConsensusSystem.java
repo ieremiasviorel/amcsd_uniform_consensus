@@ -131,6 +131,10 @@ public class ConsensusSystem {
         logMessageType(message);
     }
 
+    public void addAlgorithm(Algorithm algorithm) {
+        this.algorithms.add(algorithm);
+    }
+
     public void setTimer(int time, Paxos.Message.Type type) {
         this.timerHandler.setTimer(time, type);
     }

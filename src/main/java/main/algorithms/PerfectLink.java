@@ -6,9 +6,8 @@ import java.io.IOException;
 
 public class PerfectLink extends AbstractAlgorithm implements Algorithm {
 
-    @Override
-    String getAbstractionId() {
-        return "pl";
+    public PerfectLink() {
+        super("pl");
     }
 
     @Override

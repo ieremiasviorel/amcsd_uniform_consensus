@@ -18,15 +18,11 @@ public class EventuallyPerfectFailureDetector extends AbstractAlgorithm implemen
     private int delay;
 
     public EventuallyPerfectFailureDetector() {
+        super("epfd");
         alive = new HashSet<>(ConsensusSystem.getInstance().getProcesses());
         suspected = new HashSet<>();
         delay = delta;
         system.setTimer(delay, Paxos.Message.Type.EPFD_TIMEOUT);
-    }
-
-    @Override
-    String getAbstractionId() {
-        return "epfd";
     }
 
     @Override
